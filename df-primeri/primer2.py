@@ -23,7 +23,7 @@ from pyspark.sql.types import *
 schemaString = "timestamp Lat Lon UV_Index"
 fields = [StructField(field_name, StringType(), True) for field_name in schemaString.split()]
 schema = StructType(fields)
-df = spark.read.csv("hdfs://namenode:9000/user/dataset/pliz.csv", header=True, mode="DROPMALFORMED", schema=schema)
+df = spark.read.csv("hdfs://namenode:9000/dataset/australia_uv_index.csv", header=True, mode="DROPMALFORMED", schema=schema)
 #df = df.coalesce(2)
 print(df.rdd.getNumPartitions())
 
@@ -31,15 +31,12 @@ print(df.rdd.getNumPartitions())
 schemaStringMelanoma = "Data_type Cancer_group Year Sex Territory Count Age_standardised_rate ICD10_codes"
 fieldsMelanoma = [StructField(field_name, StringType(), True) for field_name in schemaStringMelanoma.split()]
 schemaMelanoma = StructType(fieldsMelanoma)
-dfMelanoma = spark.read.csv("hdfs://namenode:9000/user/dataset/cancer_incidence_and_mortality_by_state_and_territory.csv", header=True, mode="DROPMALFORMED", schema=schemaMelanoma)
-dfMelanoma = dfMelanoma.coalesce(2)
-print(dfMelanoma.rdd.getNumPartitions())
+dfMelanoma = spark.read.csv("hdfs://namenode:9000/dataset/cancer_incidence_and_mortality_by_state_and_territory.csv", header=True, mode="DROPMALFORMED", schema=schemaMelanoma)
 
 # extracting year, month, day from timestamp
 df = df.withColumn("Year", year(col("timestamp")))\
     .withColumn("Month", month(col("timestamp")))\
     .withColumn("Day", dayofyear(col("timestamp")))
-df.show(truncate=False)
 df = df.withColumn("UV_Index", col("UV_Index").cast(FloatType()))
 
 # adding territory column depending of Lat and Lon
@@ -54,29 +51,40 @@ df = df.withColumn("Territory", expr("case when Lat = -34.04 and Lon = 151.1 the
                                       "else 'Unknown' end"))
 dfMelanoma = dfMelanoma.withColumn("Year", col("Year").cast(IntegerType()))
 dfMelanoma = dfMelanoma.filter(dfMelanoma["Cancer_group"] == "Melanoma of the skin")\
-                        .filter((dfMelanoma["Year"]>2013) & (dfMelanoma["Year"]<2016))
-                        
+                        .filter((dfMelanoma["Year"]>2013) & (dfMelanoma["Year"]<2016))\
+                        .filter(dfMelanoma["Sex"] == "Persons")\
+                        .select("Territory", "Year", "Count", "Data_type")
 
+dfMelanoma.show(truncate=False)
 
-# max UV Index for each year in whole Australia
-# df.groupBy("Year")\
-#     .agg(
-#         max(col("UV_Index")).alias("max_UV_Index"),
-#         avg(col("UV_Index")).alias("avg_UV_Index"),
-#     ).show(truncate=False)
+# max and avg UV Index for each year in whole Australia
+dfMaxAvgAustralia = df.groupBy("Year")\
+    .agg(
+        max(col("UV_Index")).alias("max_UV_Index"),
+        avg(col("UV_Index")).alias("avg_UV_Index"),
+    )
 
 # # max UV Index for every territory in each year
-# df.groupBy("Territory").pivot("Year").max("UV_Index").show(truncate=False)
-
+# dfMaxTerritoryYear = df.groupBy("Territory").pivot("Year").max("UV_Index")
+# #dfMaxTerritoryYear.repartition(1).write.csv("hdfs://namenode:9000/dataset/MaxTerritoryYear.csv", sep='|')
 # # avg UV Index for every territory in each year
-# df.groupBy("Territory").pivot("Year").avg("UV_Index").show(truncate=False)
-
+# dfAvgTerritoryYear = df.groupBy("Territory").pivot("Year").avg("UV_Index")
+# #dfAvgTerritoryYear.repartition(1).write.csv("hdfs://namenode:9000/dataset/AvgTerritoryYear.csv", sep='|')
 # # max UV Index for every year and month
-# df.groupBy("Year").pivot("Month").max("UV_Index").show(truncate=False)
-
+# dfMaxYearMonth = df.groupBy("Year").pivot("Month").max("UV_Index")
+# #dfMaxYearMonth.repartition(1).write.csv("hdfs://namenode:9000/dataset/MaxYearMonth.csv", sep='|')
 # # avg UV Index for every year and month
-# df.groupBy("Year").pivot("Month").avg("UV_Index").show(truncate=False)
-df.groupBy("Territory", "Year").agg(max(col("UV_Index")).alias("max_UV_Index")).show(truncate=False)
-#df.join(dfMelanoma, df["Territory"] == dfMelanoma["Territory"] , "inner").show(truncate=False)
+# dfAvgYearMonth = df.groupBy("Year").pivot("Month").avg("UV_Index")
+# #dfAvgYearMonth.repartition(1).write.csv("hdfs://namenode:9000/dataset/AvgYearMonth.csv", sep='|')
+# # group by territory and year
+df = df.groupBy("Territory", "Year").max("UV_Index")
 
+# join with dataset about risk and mortality
+dfJoin = df.join(dfMelanoma, (df["Territory"] == dfMelanoma["Territory"]) & (df["Year"] == dfMelanoma["Year"]) , "inner").select(df["Territory"], df["Year"], "max(UV_Index)", "Count", "Data_type")
+dfJoin.repartition(1).write.csv("hdfs://namenode:9000/dataset/Join.csv", sep='|')
 
+# dfMaxTerritoryYear.show(truncate=False)
+# dfAvgTerritoryYear.show(truncate=False)
+# dfMaxYearMonth.show(truncate=False)
+# dfAvgYearMonth.show(truncate=False)
+dfJoin.show(truncate=False)
