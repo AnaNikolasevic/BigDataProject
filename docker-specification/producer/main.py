@@ -29,11 +29,11 @@ while True:
     timeT = timeT[:-3]
     timeT += 'Z'
 
-    response = requests.get('https://api.openuv.io/api/v1/uv?lat=45.25&lng=19.77&dt=' + timeT, headers={'x-access-token': '4c2d13dad2f7f82c029078546a246bdd '})
+    response = requests.get('https://api.openuv.io/api/v1/uv?lat=45.25&lng=19.77&dt=' + timeT, headers={'x-access-token': '1788b1946004a50888ba0fedd023e711 '})
     responseJSON = json.loads(response.text)
     uv = "UV index: " + str(responseJSON['result']['uv']) + ", " + "UV index max: " + str(responseJSON['result']['uv_max'])
 
     print(uv)
     
     producer.send(TOPIC, key=bytes(timeT, 'utf-8'), value=bytes(uv, 'utf-8'))
-    t.sleep(15)
+    t.sleep(360)

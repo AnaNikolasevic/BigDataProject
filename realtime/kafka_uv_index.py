@@ -1,6 +1,6 @@
 r"""
  Run the example
-    `$SPARK_HOME/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.4.4 $SPARK_HOME/primeri/kafka_uv_index.py zoo1:2181 uv_index`
+    `$SPARK_HOME/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.4.4 $SPARK_HOME/realtime/kafka_uv_index.py zoo1:2181 uv_index`
 """
 from __future__ import print_function
 
