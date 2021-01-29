@@ -19,7 +19,7 @@ quiet_logs(spark)
 
 from pyspark.sql.types import *
 
-# //////////////////////////
+# //////////// READING FROM AUSTRALIA UV INDEX CSV FILE //////////////
 schemaString = "timestamp Lat Lon UV_Index"
 fields = [StructField(field_name, StringType(), True) for field_name in schemaString.split()]
 schema = StructType(fields)
@@ -27,7 +27,7 @@ df = spark.read.csv("hdfs://namenode:9000/dataset/australia_uv_index.csv", heade
 #df = df.coalesce(2)
 print(df.rdd.getNumPartitions())
 
-# //////////////////////////
+# //////////// READING FROM CANCER INCIDENCE AND MORTALITY CSV FILE //////////////
 schemaStringMelanoma = "Data_type Cancer_group Year Sex Territory Count Age_standardised_rate ICD10_codes"
 fieldsMelanoma = [StructField(field_name, StringType(), True) for field_name in schemaStringMelanoma.split()]
 schemaMelanoma = StructType(fieldsMelanoma)
@@ -49,6 +49,7 @@ df = df.withColumn("Territory", expr("case when Lat = -34.04 and Lon = 151.1 the
                                       "when Lat = -35.31 and Lon = 149.2 then 'Australian Capital Territory' " +
                                       "when Lat = -12.43 and Lon = 130.89 then 'Northern Territory' " +
                                       "else 'Unknown' end"))
+# filtering second csv
 dfMelanoma = dfMelanoma.withColumn("Year", col("Year").cast(IntegerType()))
 dfMelanoma = dfMelanoma.filter(dfMelanoma["Cancer_group"] == "Melanoma of the skin")\
                         .filter((dfMelanoma["Year"]>2013) & (dfMelanoma["Year"]<2016))\

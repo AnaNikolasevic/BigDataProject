@@ -1,9 +1,9 @@
-version: '3' 
+version: '2' 
 
 services:
 
   namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.1.3-java8
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
     container_name: namenode
     volumes:
       - hadoop_namenode:/hadoop/dfs/name
@@ -16,7 +16,7 @@ services:
       - 9000:9000
   
   datanode1:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.3-java8
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
     container_name: datanode1
     depends_on: 
       - namenode
@@ -86,16 +86,6 @@ services:
     container_name: kafka_producer_1
     environment: 
       KAFKA_BROKER: "kafka1:19092"
-      SUBREDDIT: "politics"
-    depends_on: 
-      - kafka1
-
-  producer2:
-    build: ./producer
-    container_name: kafka_producer_2
-    environment: 
-      KAFKA_BROKER: "kafka1:19092"
-      SUBREDDIT: "worldnews"
     depends_on: 
       - kafka1
 
