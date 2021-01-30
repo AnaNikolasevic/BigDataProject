@@ -32,15 +32,15 @@ if __name__ == "__main__":
 
     sc = SparkContext(appName="SparkStreamingKafkaUvIndex")
     quiet_logs(sc)
-    ssc = StreamingContext(sc, 31)
+    ssc = StreamingContext(sc, 21)
 
     zooKeeper, topic1= sys.argv[1:]
     kvs = KafkaUtils.createStream(ssc, zooKeeper, "spark-streaming-consumer", {topic1: 1})
-    kvs.pprint()
-    lines = kvs.map(lambda x: "{0},{1},{2}".format(x[0], x[1].split()[2], x[1].split()[6]))
+    #kvs.pprint()
+    lines = kvs.map(lambda x: "{0},{1},{2},{3},{4}".format(x[0], x[1].split()[0], x[1].split()[1], x[1].split()[2], x[1].split()[3]))
   
     
-    lines.pprint()
+    #lines.pprint()
  
         
      # Convert RDDs of the words DStream to DataFrame and run SQL query
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         print("========= %s =========" % str(time))
 
 
-        schemaString = "datetime uv_index uv_index_max"
+        schemaString = "datetime uv_index datetime_max uv_index_max city"
         fields = [StructField(field_name, StringType(), True) for field_name in schemaString.split()]
         schema = StructType(fields)
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
             spark = getSparkSessionInstance(rdd.context.getConf())
 
             # Convert RDD[String] to RDD[Row] to DataFrame
-            rowRdd = rdd.map(lambda w: Row(datetime=w.split(",")[0], uv_index=w.split(",")[1], uv_index_max=w.split(",")[3]))
+            rowRdd = rdd.map(lambda w: Row(datetime=w.split(",")[0], uv_index=w.split(",")[1], datetime_max=w.split(",")[2], uv_index_max=w.split(",")[3], city=w.split(",")[4]))
             #print(rowRdd.take(1))
            
             dataFrame = spark.createDataFrame(rowRdd, schema=schema)
