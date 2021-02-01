@@ -1,8 +1,23 @@
 # Big data project
 
 This is a student project whose goal is to perform batch and real time processing of data on the topic of UV radiation index and its impact on human
-health in Australia.
+health in Australia. Data are taken from the official Australian Government Data website: https://data.gov.au/data/organization/australian-radiation-protection-and-nuclear-safety-agency-arpansa
 
+# Goals of batch processing are to show:
+   Maximum and average UV index per year in Australia  
+   Maximum UV Index for every territory in each year  
+   Average UV Index for every territory in each year  
+   Maximum UV Index for every year and month  
+   Month with maximum UV Index in every year  
+   Territory by year, avg UV index and number of incidence  
+   Territory by year, avg UV index and number of mortality  
+   The five cities with the highest number of deaths caused by melanoma of skin  
+   
+# Goals of stream processing are to show:
+   Current UV index in Novi Sad
+   Maximum UV index for that day in Novi Sad
+   Warning of what types of protection need to be used
+   
 # Docker-compose
 Navigate to the docker-specification folder, open powershell and run command 'docker-compose up'
 
@@ -28,3 +43,4 @@ Navigate to the docker-specification folder, open powershell and run command 'do
   2. type 'docker cp realtime spark-master:/home  
   3. type 'docker exec -it spark-master bash'  
   4. run '$SPARK_HOME/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.4.4 $SPARK_HOME/realtime/kafka_uv_index.py zoo1:2181 uv_index'  
+ 
